@@ -272,18 +272,18 @@ with c2:
             st.session_state.sel_org = clicked
             st.rerun()
 
-# --- Stacked bar: Projects by Phase (stacked by classification) --------------
+# --- Stacked bar: Projects by Phase (stacked by business organisation) -------
 with c3:
     st.markdown('<div class="panel-title">Projects by Phase</div>', unsafe_allow_html=True)
     phase_present = [p for p in PHASE_ORDER if p in fdf["Phase"].unique()]
     grp = (
-        fdf.groupby(["Phase", "Project Classification"])
+        fdf.groupby(["Phase", "Business Organisation"])
         .size()
         .reset_index(name="n")
     )
     fig = go.Figure()
-    for cls, color in CLASS_PALETTE.items():
-        sub = grp[grp["Project Classification"] == cls]
+    for org, color in PALETTE.items():
+        sub = grp[grp["Business Organisation"] == org]
         ymap = {p: 0 for p in phase_present}
         for _, r in sub.iterrows():
             if r["Phase"] in ymap:
@@ -291,11 +291,11 @@ with c3:
         fig.add_bar(
             x=phase_present,
             y=[ymap[p] for p in phase_present],
-            name=cls,
+            name=org,
             marker_color=color,
             hovertemplate=(
                 "<b>Phase: %{x}</b><br>"
-                f"Classification: {cls}<br>"
+                f"Business Organisation: {org}<br>"
                 "Projects: %{y}<extra></extra>"
             ),
         )
@@ -308,10 +308,19 @@ with c3:
         )
     fig.update_layout(
         barmode="stack",
-        margin=dict(t=20, b=10, l=10, r=10),
-        height=300,
+        margin=dict(t=20, b=70, l=10, r=10),
+        height=320,
         yaxis_title="Number of Projects",
-        legend=dict(orientation="h", yanchor="bottom", y=-0.3, font_size=9),
+        xaxis=dict(
+            type="category",
+            categoryorder="array",
+            categoryarray=phase_present,
+            tickangle=0,
+        ),
+        legend=dict(
+            orientation="h", yanchor="top", y=-0.22,
+            xanchor="center", x=0.5, font_size=9,
+        ),
         hoverlabel=dict(bgcolor="white", font_size=12),
     )
     st.plotly_chart(fig, use_container_width=True, key="bar_phase")
